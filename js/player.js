@@ -99,6 +99,7 @@
   let shuffle = localStorage.getItem('ws_shuffle') === '1';
   let autoNextTimer = null;
   let advanceToken = 0;
+  let lastCountedFile = null; // защита от «хвоста» audioprocess от предыдущего трека
 
   const fmt = (s) => {
     s = Math.max(0, s || 0);
@@ -195,6 +196,7 @@
     el.likeIcon.textContent = liked ? '♥' : '♡';
 
     countedThisTrack = false;
+    lastCountedFile = null; // новый трек = чистый счётчик (важно и для авто-перехода на тот же файл в shuffle)
   };
 
   // ---------- Список треков ----------
@@ -257,13 +259,20 @@
   });
 
   wavesurfer.on('audioprocess', () => {
+    const t = tracks[currentIndex];
+    if (!t) return;
+
     const cur = wavesurfer.getCurrentTime();
     const dur = wavesurfer.getDuration();
     el.timeCur.textContent = fmt(cur);
 
-    if (!countedThisTrack && dur > 0 && cur / dur >= 0.9) {
+    // Счётчик засчитываем только если этот файл ещё не засчитан в текущем прослушивании.
+    // lastCountedFile страхует от «хвостовых» событий предыдущего трека: они приходят
+    // уже после того, как currentIndex/setNowPlaying переключились на новый трек,
+    // и без этой проверки засчитывали бы прослушивание новому треку «на старте».
+    if (!countedThisTrack && dur > 0 && cur / dur >= 0.9 && lastCountedFile !== t.file) {
       countedThisTrack = true;
-      const t = tracks[currentIndex];
+      lastCountedFile = t.file;
       apiFetch(API_STATS, { action: 'play', track: t.file }).then((res) => {
         if (res.ok) {
           serverStats[t.file] = { likes: res.likes, plays: res.plays };
