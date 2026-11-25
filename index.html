@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Аудиоплеер — Плейлист</title>
+  <link rel="stylesheet" href="css/player.css">
+</head>
+<body>
+
+  <!-- Корневой контейнер плеера. Тема — атрибутом data-theme на нём. -->
+  <div class="ws-app" data-theme="dark" id="ws-app">
+
+    <header class="ws-app__head">
+      <h1 class="ws-app__title">Аудиоплеер</h1>
+      <div class="ws-app__actions">
+        <button id="ws-shuffle" class="ws-shuffle-btn ws-icon-btn" aria-pressed="false" title="Случайный порядок: выкл">
+          <span aria-hidden="true"><svg class="ws-shuffle-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M427.3 36.7c-6.2-6.2-16.4-6.2-22.6 0s-6.2 16.4 0 22.6l52.7 52.7-97.4 0c-30.2 0-58.7 14.2-76.8 38.4l-29.2 38.9 20 26.7 34.8-46.4C320.9 153.5 339.9 144 360 144l97.4 0-52.7 52.7c-6.2 6.2-6.2 16.4 0 22.6s16.4 6.2 22.6 0l80-80c6.2-6.2 6.2-16.4 0-22.6l-80-80zM139.2 342.4C127.1 358.5 108.1 368 88 368l-72 0c-8.8 0-16 7.2-16 16s7.2 16 16 16l72 0c30.2 0 58.7-14.2 76.8-38.4l29.2-38.9-20-26.7-34.8 46.4zM404.7 475.3c6.2 6.2 16.4 6.2 22.6 0l80-80c6.2-6.2 6.2-16.4 0-22.6l-80-80c-6.2-6.2-16.4-6.2-22.6 0s-6.2 16.4 0 22.6l52.7 52.7-93.4 0c-22.7 0-44-10.7-57.6-28.8L167.2 153.6C147.6 127.4 116.7 112 84 112l-68 0c-8.8 0-16 7.2-16 16s7.2 16 16 16l68 0c22.7 0 44 10.7 57.6 28.8L280.8 358.4C300.4 384.6 331.3 400 364 400l93.4 0-52.7 52.7c-6.2 6.2-6.2 16.4 0 22.6z"/></svg></span>
+        </button>
+        <button id="ws-theme-toggle" class="ws-icon-btn" aria-label="Переключить тему" title="Светлая/тёмная тема">
+          <span class="ws-theme-icon">☾</span>
+        </button>
+      </div>
+    </header>
+
+    <nav id="ws-playlist-tabs" class="ws-tabs" aria-label="Выбор плейлиста"></nav>
+
+    <!-- Верхний блок: сейчас играет -->
+    <section class="ws-now" aria-live="polite">
+      <img id="ws-now-cover" class="ws-now__cover" alt="Обложка" src="">
+      <div class="ws-now__body">
+        <div class="ws-now__row">
+          <button id="ws-play" class="ws-play-btn" aria-label="Пуск/остановка">
+            <span class="ws-play-btn__icon">▶</span>
+          </button>
+          <div class="ws-now__head">
+            <h2 id="ws-now-title" class="ws-now__title">—</h2>
+            <p id="ws-now-desc" class="ws-now__desc"></p>
+          </div>
+          <span id="ws-now-genre" class="ws-now__genre"></span>
+        </div>
+
+        <div id="ws-wave" class="ws-wave ws-is-empty"></div>
+
+        <div class="ws-now__times">
+          <span id="ws-time-current">0:00</span>
+          <span id="ws-time-total">0:00</span>
+        </div>
+
+        <div class="ws-now__footer">
+          <div class="ws-stats">
+            <button id="ws-like" class="ws-like-btn" aria-pressed="false" title="Нравится">
+              <span class="ws-like-btn__icon">♡</span>
+              <span id="ws-like-count" class="ws-like-btn__count">0</span>
+            </button>
+            <span class="ws-stat" title="Прослушивания">
+              <span class="ws-stat__icon">🎧</span>
+              <span id="ws-plays-count">0</span>
+            </span>
+          </div>
+          <button id="ws-comment-open" class="ws-link-btn">Сообщение</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Название сборника/альбома -->
+    <h3 id="ws-album-title" class="ws-album-title"></h3>
+
+    <!-- Плейлист -->
+    <ul id="ws-playlist" class="ws-playlist" role="list"></ul>
+
+    <!-- Текст песни -->
+    <div id="ws-texter" class="ws-texter"></div>
+
+  </div>
+
+  <!-- Модалка комментария (вне .ws-app — так делает showModal) -->
+  <dialog id="ws-comment-dialog" class="ws-dialog">
+    <form id="ws-comment-form" method="dialog" class="ws-dialog__form">
+      <h3 class="ws-dialog__title">Сообщение о песне</h3>
+      <p class="ws-dialog__hint">Комментарии не видны посетителям сайта — они отправляются на e-mail.</p>
+      <label class="ws-dialog__label">
+        Ваш комментарий
+        <textarea id="ws-comment-text" rows="5" required placeholder="Текст комментария…"></textarea>
+      </label>
+      <div class="ws-dialog__actions">
+        <button type="button" id="ws-comment-cancel" class="ws-btn">Отмена</button>
+        <button type="submit" class="ws-btn ws-btn--primary">Отправить</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="lib/wavesurfer/wavesurfer.min.js"></script>
+  <script src="js/playlists.js"></script>
+  <script src="js/player.js"></script>
+</body>
+</html>

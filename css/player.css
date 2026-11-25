@@ -1,0 +1,300 @@
+/* ===================================================================
+   Аудиоплеер — изолированные стили.
+   Всё скоупится под .ws-app, чтобы не влиять на сайт-хозяин.
+   Диалог стилизуется по уникальному id #ws-comment-dialog.
+   =================================================================== */
+.ws-app,
+.ws-app[data-theme="dark"] {
+  --bg: #0f1117;
+  --panel: #171a23;
+  --panel-2: #1f2330;
+  --fg: #e8eaf2;
+  --muted: #9096a8;
+  --line: #2a2f3d;
+  --accent: #8b8ff0;
+  --accent-2: #6f73d8;
+  --wave-bg: #1b1f2b;
+  --wave-empty: #343a4d;
+  --liked: #ff5c7a;
+
+  box-sizing: border-box;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+}
+
+.ws-app[data-theme="light"] {
+  --bg: #f4f5fa;
+  --panel: #ffffff;
+  --panel-2: #eef0f7;
+  --fg: #1f2330;
+  --muted: #6b7280;
+  --line: #e2e5ee;
+  --accent: #4F4A85;
+  --accent-2: #383351;
+  --wave-bg: #eef0fb;
+  --wave-empty: #c9cbe6;
+  --liked: #e0245e;
+}
+
+.ws-app *,
+.ws-app *::before,
+.ws-app *::after { box-sizing: border-box; }
+
+/* ---------- Шапка ---------- */
+.ws-app__head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.ws-app__title { font-size: 1.3rem; margin: 0; color: var(--fg); }
+.ws-app__actions { display: flex; gap: 8px; }
+
+.ws-icon-btn {
+  background: var(--panel); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 10px;
+  width: 40px; height: 40px; cursor: pointer; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.ws-icon-btn:hover { border-color: var(--accent); }
+.ws-icon-btn.ws-is-on {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--panel-2);
+}
+
+.ws-shuffle-btn span { line-height: 0; }
+.ws-shuffle-svg { width: 16px; height: 16px; fill: var(--fg); }
+.ws-icon-btn.ws-is-on .ws-shuffle-svg { fill: var(--accent); }
+
+/* ---------- Вкладки плейлистов ---------- */
+.ws-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 0 0 16px;
+}
+.ws-tabs__btn {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font: inherit;
+  font-size: .9rem;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.ws-tabs__btn:hover { color: var(--fg); border-color: var(--accent); }
+.ws-tabs__btn.ws-is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ---------- Сейчас играет ---------- */
+.ws-now {
+  display: flex; gap: 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px;
+}
+.ws-now__cover {
+  width: 140px; height: 140px; flex: 0 0 140px;
+  max-width: 140px;
+  object-fit: cover; border-radius: 12px;
+  background: var(--wave-bg);
+}
+.ws-now__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.ws-now__row { display: flex; align-items: center; gap: 12px; }
+.ws-play-btn {
+  width: 48px; height: 48px; flex: 0 0 48px;
+  border-radius: 50%; border: none; cursor: pointer;
+  background: var(--accent); color: #fff; font-size: 1rem;
+  display: grid; place-items: center;
+}
+.ws-play-btn:hover { background: var(--accent-2); }
+.ws-play-btn__icon { transform: translateX(1px); line-height: 1; }
+.ws-play-btn.ws-is-playing .ws-play-btn__icon { transform: none; }
+
+.ws-now__head { min-width: 0; flex: 1; }
+.ws-now__title {
+  font-size: 1.05rem; margin: 0 0 2px; color: var(--fg);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ws-now__desc {
+  margin: 0; color: var(--muted); font-size: .85rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ws-now__genre {
+  color: var(--muted); font-size: .8rem;
+  border: 1px solid var(--line); border-radius: 999px;
+  padding: 2px 10px; white-space: nowrap;
+}
+
+/* ---------- Волна ---------- */
+.ws-wave {
+  position: relative;
+  margin: 12px 0 8px;
+  min-height: 96px;
+  border-radius: 10px;
+  background: var(--wave-bg);
+  overflow: hidden;
+}
+.ws-wave.ws-is-empty::before {
+  content: ""; position: absolute; inset: 18px 12px;
+  background-image: repeating-linear-gradient(90deg, var(--wave-empty) 0 2px, transparent 2px 6px);
+  opacity: .7; pointer-events: none;
+}
+
+/* ---------- Время ---------- */
+.ws-now__times {
+  display: flex; justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted); font-size: .85rem;
+}
+
+/* ---------- Футер ---------- */
+.ws-now__footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px;
+}
+.ws-stats { display: flex; align-items: center; gap: 16px; }
+
+.ws-like-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--fg);
+  cursor: pointer; font: inherit; padding: 4px 0;
+}
+.ws-like-btn__icon { font-size: 1.2rem; line-height: 1; }
+.ws-like-btn.ws-is-liked .ws-like-btn__icon { color: var(--liked); }
+.ws-like-btn__count { color: var(--muted); font-variant-numeric: tabular-nums; }
+.ws-like-btn.ws-is-liked .ws-like-btn__count { color: var(--liked); }
+.ws-like-btn:disabled { cursor: default; opacity: 1; }
+.ws-like-btn:disabled .ws-like-btn__icon,
+.ws-like-btn:disabled .ws-like-btn__count { color: var(--liked); }
+
+.ws-stat { color: var(--muted); font-size: .9rem; }
+
+.ws-link-btn {
+  background: none; border: 1px solid var(--line); border-radius: 10px;
+  color: var(--fg); padding: 6px 12px; cursor: pointer; font: inherit; font-size: .85rem;
+}
+.ws-link-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---------- Альбом и плейлист ---------- */
+.ws-album-title {
+  margin: 24px 0 10px; font-size: .95rem;
+  text-transform: uppercase; letter-spacing: .05em; color: var(--muted);
+}
+
+.ws-playlist { list-style: none; margin: 0; padding: 0; }
+.ws-track {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 10px; border-radius: 10px; cursor: pointer;
+  border: 1px solid transparent;
+}
+.ws-track:hover { background: var(--panel); }
+.ws-track.ws-is-active { background: var(--panel-2); border-color: var(--accent); }
+.ws-track.ws-is-active .ws-track__title { color: var(--accent); font-weight: 600; }
+
+.ws-track__mark {
+  width: 14px; flex: 0 0 14px; color: var(--accent); font-size: .8rem;
+}
+.ws-track.ws-is-active .ws-track__mark::before { content: "▶"; }
+
+.ws-track__thumb {
+  width: 44px; height: 44px; flex: 0 0 44px;
+  object-fit: cover; border-radius: 8px;
+  background: var(--wave-bg);
+}
+.ws-track__title {
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: .95rem;
+}
+.ws-track__stats {
+  display: flex; gap: 12px; color: var(--muted);
+  font-size: .8rem; font-variant-numeric: tabular-nums;
+}
+.ws-track__likes { color: var(--liked); opacity: .85; }
+
+/* ---------- Текст песни ---------- */
+.ws-texter {
+  margin-top: 24px;
+  padding: 16px 18px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--fg);
+  font-size: .95rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.ws-texter[hidden] { display: none; }
+.ws-texter.ws-is-loading { color: var(--muted); opacity: .6; }
+.ws-texter::-webkit-scrollbar { width: 8px; }
+.ws-texter::-webkit-scrollbar-thumb { background: var(--line); border-radius: 8px; }
+.ws-texter::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ---------- Диалог (по уникальному id) ---------- */
+#ws-comment-dialog.ws-dialog {
+  border: 1px solid #2a2f3d; border-radius: 14px;
+  background: #171a23; color: #e8eaf2;
+  padding: 0; max-width: 460px; width: calc(100% - 32px);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+}
+#ws-comment-dialog::backdrop { background: rgba(0,0,0,.55); }
+
+.ws-dialog__form { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+.ws-dialog__title { margin: 0; font-size: 1.05rem; color: #e8eaf2; }
+.ws-dialog__hint { margin: 0; color: #9096a8; font-size: .85rem; }
+.ws-dialog__label { display: flex; flex-direction: column; gap: 6px; font-size: .9rem; }
+#ws-comment-dialog textarea {
+  background: #1f2330; color: #e8eaf2;
+  border: 1px solid #2a2f3d; border-radius: 10px;
+  padding: 10px; font: inherit; resize: vertical;
+}
+.ws-dialog__actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+.ws-btn {
+  border: 1px solid #2a2f3d; background: #171a23; color: #e8eaf2;
+  border-radius: 10px; padding: 8px 16px; cursor: pointer; font: inherit;
+}
+.ws-btn--primary { background: #8b8ff0; border-color: #8b8ff0; color: #fff; }
+.ws-btn--primary:hover { background: #6f73d8; }
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 560px) {
+  .ws-now { flex-direction: column; }
+  .ws-now__cover { width: 100%; height: auto; aspect-ratio: 1 / 1; flex: none; }
+  .ws-now__row { flex-wrap: wrap; }
+  .ws-now__genre { margin-left: auto; }
+  .ws-track__stats { flex-direction: column; gap: 2px; align-items: flex-end; }
+}
+
+
+/* удалить при встраивании */
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  --bg: #0f1117;
+  box-sizing: border-box;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+  padding: 0;
+}
