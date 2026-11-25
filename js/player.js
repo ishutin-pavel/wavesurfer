@@ -100,6 +100,20 @@
   let autoNextTimer = null;
   let advanceToken = 0;
   let lastCountedFile = null; // защита от «хвоста» audioprocess от предыдущего трека
+  let countedAt = 0;           // время засчёта (performance.now) — для anti-flood окна
+  let loadSeq = 0;             // счётчик загрузок: привязываем трек к событиям именно его загрузки
+  let isCurrentLoad = () => true;
+
+  // Волновая панель Wavesurfer 7 испускает 'audioprocess' из rAF-таймера, который
+  // останавливается только на событии 'pause' медиаэлемента. Если старый трек играл
+  // и мы сделали load() нового, 'pause' не приходит, таймер не гаснет, и несколько
+  // кадров подряд летят старые cur/dur (≈ конец предыдущего трека) — при уже
+  // обновлённом currentIndex это мгновенный ложный засчёт новому треку.
+  // Каждый вызов loadIndex() инвалидирует события всех предыдущих загрузок.
+  const trackLoad = () => {
+    const my = ++loadSeq;
+    return () => loadSeq === my; // true => события относятся к текущей загрузке
+  };
 
   const fmt = (s) => {
     s = Math.max(0, s || 0);
@@ -130,6 +144,7 @@
 
     clearTimeout(autoNextTimer);
     advanceToken++;
+    isCurrentLoad = trackLoad(); // гасим хвостовые события от прошлой загрузки/плейлиста
     try { wavesurfer.stop(); } catch (_) {}
     try { wavesurfer.empty(); } catch (_) {}
 
@@ -138,6 +153,7 @@
     tracks = playlist.tracks;
     currentIndex = -1;
     countedThisTrack = false;
+    lastCountedFile = null;
     localStorage.setItem('ws_list', listKey);
 
     const url = new URL(location.href);
@@ -238,6 +254,11 @@
   // ---------- Загрузка ----------
   const loadIndex = async (i) => {
     if (i < 0 || i >= tracks.length) return;
+    // ВАЖНО: wavesurfer.load() внутри делает setSrc → у медиаэлемента срабатывает
+    // 'emptied' → Wavesurfer эмитит 'pause' и ГАСИТ rAF-таймер. Если бы мы сбросили
+    // счётчик загрузок ПОСЛЕ await load(), все хвостовые кадры от старой загрузки
+    // прошли бы фильтр isCurrentLoad() — именно поэтому инвалидация делается ДО load.
+    isCurrentLoad = trackLoad(); // все «хвостовые» события от прошлой загрузки теперь игнорируются
     currentIndex = i;
     clearTimeout(autoNextTimer);
     setNowPlaying(i);
@@ -259,20 +280,35 @@
   });
 
   wavesurfer.on('audioprocess', () => {
+    // События от «умерших» загрузок (хвост rAF-таймера после переключения трека) — игнор.
+    if (!isCurrentLoad()) return;
+
     const t = tracks[currentIndex];
     if (!t) return;
 
     const cur = wavesurfer.getCurrentTime();
     const dur = wavesurfer.getDuration();
+
+    // Страхуемся от «залипшего» времени: если после load() медиаэлемент ещё не
+    // перемотан на 0 (или currentTime остался от прошлой загрузки), любые расчёты
+    // прогресса по такому cur/dur ложные. Время на табло при этом всё равно
+    // обновляем, но к засчёту это событие не допускаем.
+    if (!isCurrentLoad() || cur <= 0.5) {
+      el.timeCur.textContent = fmt(cur);
+      return;
+    }
+
     el.timeCur.textContent = fmt(cur);
 
-    // Счётчик засчитываем только если этот файл ещё не засчитан в текущем прослушивании.
-    // lastCountedFile страхует от «хвостовых» событий предыдущего трека: они приходят
-    // уже после того, как currentIndex/setNowPlaying переключились на новый трек,
-    // и без этой проверки засчитывали бы прослушивание новому треку «на старте».
-    if (!countedThisTrack && dur > 0 && cur / dur >= 0.9 && lastCountedFile !== t.file) {
+    // Засчёт только если: файл ещё не засчитан в этом прослушивании; это не хвост
+    // событий предыдущего трека того же файла (lastCountedFile); и с момента
+    // последнего засчёта прошло >=10 c (anti-flood: защита от любых остаточных
+    // гонек, повторных триггеров finish/audioprocess и задублированных запросов).
+    if (!countedThisTrack && dur > 0 && cur / dur >= 0.9 &&
+        lastCountedFile !== t.file && performance.now() - countedAt >= 10000) {
       countedThisTrack = true;
       lastCountedFile = t.file;
+      countedAt = performance.now();
       apiFetch(API_STATS, { action: 'play', track: t.file }).then((res) => {
         if (res.ok) {
           serverStats[t.file] = { likes: res.likes, plays: res.plays };
