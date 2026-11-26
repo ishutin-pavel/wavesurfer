@@ -12,6 +12,11 @@
     plays: $('ws-plays-count'),
     list: $('ws-playlist'), album: $('ws-album-title'),
     texter: $('ws-texter'),
+    lyricsBtn: $('ws-lyrics-open'),
+    lyricsDialog: $('ws-lyrics-dialog'),
+    lyricsDialogTitle: $('ws-lyrics-dialog-title'),
+    lyricsDialogText: $('ws-lyrics-dialog-text'),
+    lyricsClose: $('ws-lyrics-close'),
     themeToggle: $('ws-theme-toggle'), themeIcon: document.querySelector('.ws-theme-icon'),
     shuffleBtn: $('ws-shuffle'),
     tabs: $('ws-playlist-tabs'),
@@ -20,10 +25,14 @@
   };
 
   // ---------- Текст песни ----------
+  let lyricsText = '';
+
   const resetLyrics = () => {
+    lyricsText = '';
     el.texter.hidden = true;
     el.texter.textContent = '';
     el.texter.classList.remove('ws-is-loading');
+    el.lyricsBtn.hidden = true; // нет текста — нет иконки
   };
 
   const loadLyrics = async (track) => {
@@ -36,13 +45,30 @@
       if (!res.ok) throw new Error('404');
       const text = (await res.text()).trim();
       if (!text) throw new Error('empty');
+      lyricsText = text;
       el.texter.textContent = text;
+      el.lyricsBtn.hidden = false; // у трека есть текст — показываем иконку
     } catch (_) {
       resetLyrics();
     } finally {
       el.texter.classList.remove('ws-is-loading');
     }
   };
+
+  // Иконка «текст» рядом с названием играющей песни → всплывающее окно с текстом
+  el.lyricsBtn.addEventListener('click', () => {
+    if (!lyricsText) return;
+    const t = tracks[currentIndex];
+    el.lyricsDialogTitle.textContent = t ? `Текст песни — ${t.title}` : 'Текст песни';
+    el.lyricsDialogText.textContent = lyricsText;
+    el.lyricsDialogText.scrollTop = 0;
+    el.lyricsDialog.showModal();
+  });
+  el.lyricsClose.addEventListener('click', () => el.lyricsDialog.close());
+  // Клик по затемнённому фону закрывает окно
+  el.lyricsDialog.addEventListener('click', (e) => {
+    if (e.target === el.lyricsDialog) el.lyricsDialog.close();
+  });
 
   // ---------- API ----------
   const API_STATS = 'api/stats.php';

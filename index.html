@@ -37,7 +37,10 @@
             <span class="ws-play-btn__icon">▶</span>
           </button>
           <div class="ws-now__head">
-            <h2 id="ws-now-title" class="ws-now__title">—</h2>
+            <div class="ws-now__titlerow">
+              <h2 id="ws-now-title" class="ws-now__title">—</h2>
+              <button id="ws-lyrics-open" class="ws-lyrics-btn" hidden title="Текст песни" aria-label="Показать текст песни">📜</button>
+            </div>
             <p id="ws-now-desc" class="ws-now__desc"></p>
           </div>
           <span id="ws-now-genre" class="ws-now__genre"></span>
@@ -91,6 +94,17 @@
         <button type="submit" class="ws-btn ws-btn--primary">Отправить</button>
       </div>
     </form>
+  </dialog>
+
+  <!-- Модалка текста песни -->
+  <dialog id="ws-lyrics-dialog" class="ws-dialog">
+    <div class="ws-dialog__form ws-lyrics-dialog__body">
+      <h3 id="ws-lyrics-dialog-title" class="ws-dialog__title">Текст песни</h3>
+      <pre id="ws-lyrics-dialog-text" class="ws-lyrics-dialog__text"></pre>
+      <div class="ws-dialog__actions">
+        <button type="button" id="ws-lyrics-close" class="ws-btn">Закрыть</button>
+      </div>
+    </div>
   </dialog>
 
   <script src="lib/wavesurfer/wavesurfer.min.js"></script>
