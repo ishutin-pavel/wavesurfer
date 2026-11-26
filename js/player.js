@@ -11,7 +11,6 @@
     like: $('ws-like'), likeIcon: document.querySelector('.ws-like-btn__icon'), likeCount: $('ws-like-count'),
     plays: $('ws-plays-count'),
     list: $('ws-playlist'), album: $('ws-album-title'),
-    texter: $('ws-texter'),
     lyricsBtn: $('ws-lyrics-open'),
     lyricsDialog: $('ws-lyrics-dialog'),
     lyricsDialogTitle: $('ws-lyrics-dialog-title'),
@@ -29,29 +28,21 @@
 
   const resetLyrics = () => {
     lyricsText = '';
-    el.texter.hidden = true;
-    el.texter.textContent = '';
-    el.texter.classList.remove('ws-is-loading');
     el.lyricsBtn.hidden = true; // нет текста — нет иконки
   };
 
   const loadLyrics = async (track) => {
     resetLyrics();
     if (!track.lyrics) return;
-    el.texter.classList.add('ws-is-loading');
-    el.texter.hidden = false;
     try {
       const res = await fetch(track.lyrics, { cache: 'no-store' });
       if (!res.ok) throw new Error('404');
       const text = (await res.text()).trim();
       if (!text) throw new Error('empty');
       lyricsText = text;
-      el.texter.textContent = text;
       el.lyricsBtn.hidden = false; // у трека есть текст — показываем иконку
     } catch (_) {
       resetLyrics();
-    } finally {
-      el.texter.classList.remove('ws-is-loading');
     }
   };
 
