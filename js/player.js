@@ -213,6 +213,18 @@
 
     countedThisTrack = false;
     lastCountedFile = null; // новый трек = чистый счётчик (важно и для авто-перехода на тот же файл в shuffle)
+
+    // Медиа-виджет блокировки экрана (обновляем сразу, не дожидаясь 'play')
+    if ('mediaSession' in window) {
+      try {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: t.title,
+          artist: playlist.album,
+          album: playlist.album,
+          artwork: [{ src: t.cover, sizes: '512x512', type: '' }],
+        });
+      } catch (_) {}
+    }
   };
 
   // ---------- Список треков ----------
@@ -322,10 +334,63 @@
   wavesurfer.on('play', () => {
     el.playIcon.textContent = '❚❚';
     el.play.classList.add('ws-is-playing');
+    requestWakeLock();
+    // Страховка: если ОС всё же приостановила воспроизведение на фоне,
+    // пробуем продолжить (на части устройств это разрешено).
+    if (document.hidden) resumeIfHidden();
   });
   wavesurfer.on('pause', () => {
     el.playIcon.textContent = '▶';
     el.play.classList.remove('ws-is-playing');
+  });
+
+  // ---------- Фоновое воспроизведение (экран выключен) ----------
+  // Без MediaSession мобильный Chrome/Safari считают страницу неактивной и
+  // останавливают <audio> при блокировке экрана. Плюс: Play/Pause/Next с
+  // наушников и обложек на локскрине; без AudioContext — он глушит звук в фоне.
+  let wakeLock = null;
+
+  const media = () => {
+    try { return wavesurfer.getMediaElement(); } catch (_) { return null; }
+  };
+
+  const requestWakeLock = async () => {
+    if (!('wakeLock' in navigator)) return;
+    try { wakeLock = await navigator.wakeLock.request('screen'); } catch (_) {}
+  };
+
+  let resumeTimer = null;
+  const resumeIfHidden = () => {
+    clearTimeout(resumeTimer);
+    resumeTimer = setTimeout(() => {
+      const m = media();
+      if (m && document.hidden && !m.paused && m.ended === false) {
+        wavesurfer.play().catch(() => {});
+      }
+    }, 300);
+  };
+
+  if ('mediaSession' in window) {
+    try {
+      navigator.mediaSession.setActionHandler('play', () => wavesurfer.play());
+      navigator.mediaSession.setActionHandler('pause', () => wavesurfer.pause());
+      navigator.mediaSession.setActionHandler('previoustrack', () => {
+        if (currentIndex > 0) playIndex(currentIndex - 1);
+      });
+      navigator.mediaSession.setActionHandler('nexttrack', () => {
+        if (shuffle && tracks.length > 1) {
+          let n; do { n = Math.floor(Math.random() * tracks.length); } while (n === currentIndex);
+          playIndex(n);
+        } else if (currentIndex + 1 < tracks.length) {
+          playIndex(currentIndex + 1);
+        }
+      });
+    } catch (_) {}
+  }
+
+  // Wake Lock теряется при блокировке — перезапрашиваем при возврате на вкладку.
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) requestWakeLock();
   });
 
   wavesurfer.on('finish', () => {
